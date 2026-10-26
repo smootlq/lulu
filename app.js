@@ -4,6 +4,9 @@
 const QS = window.LULU_Q || [], PASS = window.LULU_PASSAGES || {};
 const QBY = Object.fromEntries(QS.map(q=>[q.id,q]));
 const KEY='lulu.v1', DAY=864e5;
+// ---- Parent daily report (Google Apps Script web app owned by the dad). Paste the /exec URL here. ----
+const REPORT_URL='https://script.google.com/macros/s/AKfycbxH4po-nSwPbtrXbYD7h93aIO2akbDuh1NtztlgL1Cx8KHCnZ8cKzj3LS8ep3k8WHqnxQ/exec';            // e.g. 'https://script.google.com/macros/s/XXXX/exec'
+const REPORT_TOKEN='lulu-bdc13450439785ff';  // must match TOKEN in the Apps Script code
 const TYPES = {
   analogy:{n:'التناظر اللفظي',e:'🔗',s:'v'}, completion:{n:'إكمال الجمل',e:'✍️',s:'v'}, error:{n:'الخطأ السياقي',e:'🕵️',s:'v'},
   reading:{n:'استيعاب المقروء',e:'📖',s:'v'}, odd:{n:'المفردة الشاذة',e:'🦄',s:'v'},
@@ -190,7 +193,7 @@ function answer(i,btn){
   btn.classList.add('pick');document.querySelectorAll('.opt').forEach(b=>b.disabled=true);$('#tools').innerHTML='';
   const wasGoal=dayRec().q>=S.goal;
   setTimeout(()=>{ // brief pause = a moment to think before feedback
-    const mastered=recordAnswer(q,ok,review);R.res.push(ok);
+    const mastered=recordAnswer(q,ok,review);R.res.push(ok);dayRec().ms=(dayRec().ms||0)+Math.min(Date.now()-R.qStart,180000);
     document.querySelectorAll('.opt').forEach(b=>{const k=+b.dataset.i;b.classList.remove('pick');if(k===q.a)b.classList.add('ok');else if(k===i)b.classList.add('no');else b.classList.add('dim');});
     let gain;
     if(ok){R.combo++;S.bestCombo=Math.max(S.bestCombo,R.combo);gain=review?15:10;if(R.combo%3===0)gain+=5;sfx.ok();confetti(R.combo>=3?110:55);}
@@ -222,7 +225,7 @@ function finishRound(quit){
   clearInterval(R&&R.tm);if(!R)return;const n=R.res.length,c=R.res.filter(Boolean).length;
   if(n===0){R=null;location.hash='#home';return;}
   S.rounds++;const streakMsg=touchStreak();const bonus=quit?0:20;if(bonus){addXP(bonus);R.xp+=bonus;}
-  S.hist.unshift({t:Date.now(),title:R.title,n,c,xp:R.xp});S.hist=S.hist.slice(0,60);
+  S.hist.unshift({t:Date.now(),title:R.title,n,c,xp:R.xp});S.hist=S.hist.slice(0,60);setTimeout(reportNow,50);
   // surprise reward (variable reward keeps it exciting)
   let surprise='';if(!quit){const r=Math.random();
     if(r<.45){const st=pick(STICKERS);S.stickers.push(st);surprise=`<span class="reward">${st}</span><p><b>ملصق جديد لمجموعتك!</b></p>`;}
@@ -331,7 +334,7 @@ function exam(){
 function confirmSubmit(){const blank=M.ans.filter(a=>a==null).length;modal(`<h3>تسلّمين؟</h3>${blank?`<p>باقي <b>${blank}</b> بدون إجابة. تذكّري: <b>الخطأ ما ينقص درجة</b>، فخمّني بدل ما تتركينها 😉</p>`:'<p>جاوبتِ على الكل 👏</p>'}<div class="grid2"><button class="btn ghost" data-close>أرجع</button><button class="btn" id="sy">سلّمي</button></div>`);$('#sy').onclick=()=>{closeModal();submitMock();};}
 function submitMock(){clearInterval(exam.t);if(!M)return;const by={};let c=0;
   M.qs.forEach((q,i)=>{const ok=M.ans[i]===q.a;if(ok)c++;const b=by[q.type]||(by[q.type]={n:0,c:0});b.n++;if(ok)b.c++;if(M.ans[i]!=null)recordAnswer(q,ok,false);else if(!S.mist[q.id])S.mist[q.id]={box:1,due:Date.now()+DAY,added:Date.now()};});
-  const r={k:M.k,t:Date.now(),n:M.qs.length,c,by,secs:Math.round((Date.now()-M.t0)/1000)};S.mocks.unshift(r);S.mocks=S.mocks.slice(0,30);addXP(c*5+30);touchStreak();checkBadges();save();
+  const r={k:M.k,t:Date.now(),n:M.qs.length,c,by,secs:Math.round((Date.now()-M.t0)/1000)};S.mocks.unshift(r);S.mocks=S.mocks.slice(0,30);dayRec().ms=(dayRec().ms||0)+Math.min(r.secs,3600)*1000;addXP(c*5+30);touchStreak();checkBadges();save();setTimeout(reportNow,50);
   const done=M;M=null;sfx.win();confetti(160);const pct=Math.round(c/r.n*100);
   render(`<div class="onb">${mascot(pct>=60?'cheer':'encourage')}<h1>${c} / ${r.n} — ${pct}%</h1><p>${pct>=80?'مستوى رهيب! 🏆':pct>=60?'أداء قوي! نحسّن الباقي 💪':'التجربة نفسها إنجاز 👏 الأخطاء صارت في بنكك'}</p><p class="mut">الوقت: ${Math.floor(r.secs/60)} دقيقة · +${c*5+30} نقطة</p></div>
    <div class="card bars">${Object.entries(by).map(([t,b])=>`<div class="b"><div class="row"><span>${TYPES[t].e} ${TYPES[t].n}</span><span>${b.c}/${b.n}</span></div><div class="track"><i style="width:${b.c/b.n*100}%"></i></div></div>`).join('')}</div>
@@ -394,7 +397,12 @@ function settings(){
    <div class="grid2"><button class="btn t sm" id="exp">⬇️ تنزيل ملف</button><button class="btn ghost sm" id="share">📤 مشاركة/نسخ</button></div>
    <div class="field"><b>استرجاع</b><input type="file" id="file" accept="application/json,.json"><textarea id="paste" rows="2" placeholder="أو الصقي النسخة هنا"></textarea><button class="btn ghost sm" id="imp">♻️ استرجعي من النص</button></div></div>
    <div class="card"><button class="btn ghost sm" id="reset">🗑️ مسح كل التقدّم</button></div>
-   <p class="mut" style="text-align:center">تطبيق لولو · ${QS.length} سؤال · يعمل بدون إنترنت ✈️</p>`,{tab:'settings'});
+   <div class="card" style="background:#fff0f7"><b>💌 بابا يشجّعك</b><p class="mut">ملخص بسيط لتقدّمك (عدد الأسئلة والنسبة والمستوى) يوصل لبابا كل يوم، عشان يفرح بإنجازك ويدعمك 💜</p></div>
+   <p class="mut" style="text-align:center" id="ver">تطبيق لولو · ${QS.length} سؤال · يعمل بدون إنترنت ✈️</p>
+   <div class="card" id="adv" hidden><b>رابط التقرير (لولي الأمر)</b><div class="field"><input id="rurl" class="nodig" dir="ltr" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(S.reportUrl||'')}"></div><small class="mut nodig" dir="ltr">${REPORT_URL?'built-in URL set':'no built-in URL'} · queued: ${(S.outbox||[]).length}</small><br><button class="btn ghost sm" id="rsend">📤 أرسل الآن</button></div>`,{tab:'settings'});
+  let taps=0;$('#ver').onclick=()=>{if(++taps>=5){$('#adv').hidden=false;}};
+  $('#rurl').onchange=e=>{const v=e.target.value.trim();if(v&&!/^https:\/\/script\.google\.com\//.test(v)){toast('الرابط غير صحيح');return;}S.reportUrl=v;save();toast('تم الحفظ ✅');reportNow();};
+  $('#rsend').onclick=()=>{reportNow();toast(reportUrl()?'تم الإرسال 📤':'ما فيه رابط');};
   $('#name').onchange=e=>{S.name=e.target.value.trim().slice(0,20);save();toast('تم الحفظ 💜');};
   document.querySelectorAll('#goal button').forEach(b=>b.onclick=()=>{S.goal=+b.dataset.n;save();settings();});
   document.querySelectorAll('[data-tg]').forEach(b=>b.onclick=()=>{const k=b.dataset.tg;S.set[k]=!S.set[k];save();b.classList.toggle('on',S.set[k]);if(k==='calm')calmSound(S.set.calm);if(k==='calmAnim')document.body.classList.toggle('calm',S.set.calmAnim);});
@@ -416,6 +424,31 @@ function onboard(step=0){
   if($('#n2')){const go=()=>{S.name=($('#nm').value||'').trim().slice(0,20);save();onboard(2);};$('#n2').onclick=go;$('#skip').onclick=()=>onboard(2);}
   if($('#g')){document.querySelectorAll('#g button').forEach(b=>b.onclick=()=>{S.goal=+b.dataset.n;document.querySelectorAll('#g button').forEach(x=>x.classList.toggle('on',x===b));});$('#n3').onclick=()=>{S.onboarded=true;save();confetti(120);sfx.win();home();};}}
 
+// ---------- parent report (silent; queued offline, flushed when online) ----------
+function reportUrl(){return (S.reportUrl||REPORT_URL||'').trim();}
+function snapshot(){
+  const d=S.days[today()]||{q:0,c:0,xp:0,ms:0};const L=level(S.xp);const ans=totalAnswered(),cor=totalCorrect();
+  const types={};for(const t in TYPES){const s=S.ts[t];if(s&&s.s)types[t]={n:TYPES[t].n,s:s.s,c:s.c,acc:Math.round(s.c/s.s*100)};}
+  const weak=Object.entries(types).filter(([t,v])=>v.s>=3).sort((a,b)=>a[1].acc-b[1].acc).slice(0,3).map(([t,v])=>({t,n:v.n,acc:v.acc}));
+  const last7=[];for(let i=6;i>=0;i--){const k=dkey(new Date(Date.now()-i*DAY));const r=S.days[k];last7.push({d:k,q:r?r.q:0,c:r?r.c:0,min:r?Math.round((r.ms||0)/60000):0});}
+  if(!S.dev){S.dev=Math.random().toString(36).slice(2,10);save();}
+  return {token:REPORT_TOKEN,v:1,dev:S.dev,sentAt:new Date().toISOString(),date:today(),name:S.name||'',
+    today:{q:d.q,c:d.c,pct:d.q?Math.round(d.c/d.q*100):null,min:Math.round((d.ms||0)/60000),xp:d.xp,rounds:S.hist.filter(h=>dkey(new Date(h.t))===today()).length,goal:S.goal},
+    total:{q:ans,c:cor,pct:ans?Math.round(cor/ans*100):null,seen:Object.keys(S.qs).length,bank:QS.length},
+    xp:S.xp,level:L.i+1,levelName:L.name,streak:S.streak.n,bestStreak:S.streak.best,lastActive:S.streak.last,
+    mistakes:Object.keys(S.mist).length,due:dueMistakes().length,mastered:S.mastered.length,
+    types,weak,mocks:S.mocks.slice(0,5).map(m=>({d:dkey(new Date(m.t)),k:m.k,kn:(MOCKS[m.k]||{}).n||m.k,c:m.c,n:m.n,pct:Math.round(m.c/m.n*100),min:Math.round(m.secs/60)})),
+    badges:S.badges.length,last7};}
+function reportNow(){if(!reportUrl())return;try{const s=snapshot();S.outbox=(S.outbox||[]).filter(x=>x.date!==s.date);S.outbox.push(s);S.outbox=S.outbox.slice(-14);save();flushReports();}catch(e){}}
+let flushing=false;
+async function flushReports(){const url=reportUrl();if(!url||flushing||!(S.outbox&&S.outbox.length)||navigator.onLine===false)return;flushing=true;
+  try{while(S.outbox.length){const s=S.outbox[0];
+      await fetch(url,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(s)});
+      S.outbox.shift();S.lastReport=Date.now();save();}}
+  catch(e){/* offline or blocked: keep queued, retry later */}finally{flushing=false;}}
+window.addEventListener('online',flushReports);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')flushReports();});
+
 // ---------- router ----------
 function route(){
   const h=(location.hash||'#home').slice(1);const [p,arg]=h.split('/');closeModal();
@@ -426,6 +459,7 @@ function route(){
 window.addEventListener('hashchange',route);
 document.body.classList.toggle('calm',!!S.set.calmAnim);
 route();
+setTimeout(reportNow,1500);
 if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
-window.LULU={get S(){return S;},get R(){return R;},get M(){return M;},play(ids){R={cfg:{n:ids.length,mode:'practice'},qs:ids.map(i=>QBY[i]),i:0,res:[],xp:0,combo:0,hint:true,second:[],secondDone:true,t0:Date.now(),title:'test'};if(location.hash==='#play')showQuestion();else location.hash='#play';}}; // for automated testing
+window.LULU={get S(){return S;},get R(){return R;},get M(){return M;},snapshot,reportNow,flushReports,play(ids){R={cfg:{n:ids.length,mode:'practice'},qs:ids.map(i=>QBY[i]),i:0,res:[],xp:0,combo:0,hint:true,second:[],secondDone:true,t0:Date.now(),title:'test'};if(location.hash==='#play')showQuestion();else location.hash='#play';}}; // for automated testing
 })();
