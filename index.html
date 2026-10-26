@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#7c3aed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="لولو">
+<meta name="application-name" content="لولو">
+<meta name="description" content="تطبيق لولو — تدرّبي على اختبار القدرات العامة بطريقة ممتعة تناسب تشتت الانتباه">
+<meta name="format-detection" content="telephone=no">
+<title>تطبيق لولو 🦉 القدرات</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="preload" href="fonts/Cairo.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="bg" aria-hidden="true"><i></i><i></i><i></i></div>
+<main id="app" aria-live="polite"></main>
+<nav id="tabs" class="tabs">
+  <a href="#home" data-tab="home"><span>🏠</span><b>الرئيسية</b></a>
+  <a href="#practice" data-tab="practice"><span>🎯</span><b>تدرّبي</b></a>
+  <a href="#mistakes" data-tab="mistakes"><span>📒</span><b>أخطائي</b></a>
+  <a href="#stats" data-tab="stats"><span>📊</span><b>تقدّمي</b></a>
+  <a href="#settings" data-tab="settings"><span>⚙️</span><b>الإعدادات</b></a>
+</nav>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div id="toast" role="status"></div>
+<div id="overlay" hidden></div>
+<noscript>فعّلي الجافاسكربت لتشغيل تطبيق لولو.</noscript>
+<script src="questions.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
