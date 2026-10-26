@@ -1,5 +1,5 @@
 /* Lulu service worker: cache-first, works fully offline after first visit. */
-const VERSION='lulu-v1.1.0';
+const VERSION='lulu-v1.1.1';
 const ASSETS=['./','./index.html','./styles.css','./app.js','./questions.js','./manifest.webmanifest','./fonts/Cairo.ttf',
  './icons/apple-touch-icon.png','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));});

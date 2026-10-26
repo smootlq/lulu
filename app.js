@@ -425,7 +425,8 @@ function onboard(step=0){
   if($('#g')){document.querySelectorAll('#g button').forEach(b=>b.onclick=()=>{S.goal=+b.dataset.n;document.querySelectorAll('#g button').forEach(x=>x.classList.toggle('on',x===b));});$('#n3').onclick=()=>{S.onboarded=true;save();confetti(120);sfx.win();home();};}}
 
 // ---------- parent report (silent; queued offline, flushed when online) ----------
-function reportUrl(){return (S.reportUrl||REPORT_URL||'').trim();}
+function isParent(){const n=(S.name||'').trim().toLowerCase();return n==='شافي'||n==='shafi';}
+function reportUrl(){if(isParent())return '';return (S.reportUrl||REPORT_URL||'').trim();}
 function snapshot(){
   const d=S.days[today()]||{q:0,c:0,xp:0,ms:0};const L=level(S.xp);const ans=totalAnswered(),cor=totalCorrect();
   const types={};for(const t in TYPES){const s=S.ts[t];if(s&&s.s)types[t]={n:TYPES[t].n,s:s.s,c:s.c,acc:Math.round(s.c/s.s*100)};}
