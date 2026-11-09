@@ -256,7 +256,7 @@ function finishRound(quit){
   clearInterval(R&&R.tm);if(!R)return;const n=R.res.length,c=R.res.filter(Boolean).length;
   if(n===0){R=null;location.hash='#home';return;}
   S.rounds++;const streakMsg=touchStreak();const bonus=quit?0:20;if(bonus){addXP(bonus);R.xp+=bonus;}
-  S.hist.unshift({t:Date.now(),title:R.title,n,c,xp:R.xp});S.hist=S.hist.slice(0,60);setTimeout(reportNow,50);
+  S.hist.unshift({t:Date.now(),title:R.title,n,c,xp:R.xp});S.hist=S.hist.slice(0,60);setTimeout(function(){reportNow('round');},50);
   // surprise reward (variable reward keeps it exciting)
   let surprise='';if(!quit){const r=Math.random();
     if(r<.45){const st=pick(STICKERS);S.stickers.push(st);surprise=`<span class="reward">${st}</span><p><b>ملصق جديد لمجموعتك!</b></p>`;}
@@ -372,7 +372,7 @@ function exam(){
 function confirmSubmit(){const blank=M.ans.filter(a=>a==null).length;modal(`<h3>تسلّمين؟</h3>${blank?`<p>باقي <b>${blank}</b> بدون إجابة. تذكّري: <b>الخطأ ما ينقص درجة</b>، فخمّني بدل ما تتركينها 😉</p>`:'<p>جاوبتِ على الكل 👏</p>'}<div class="grid2"><button class="btn ghost" data-close>أرجع</button><button class="btn" id="sy">سلّمي</button></div>`);$('#sy').onclick=()=>{closeModal();submitMock();};}
 function submitMock(){clearInterval(exam.t);if(!M)return;const by={};let c=0;
   M.qs.forEach((q,i)=>{const ok=M.ans[i]===q.a;if(ok)c++;const b=by[q.type]||(by[q.type]={n:0,c:0});b.n++;if(ok)b.c++;if(M.ans[i]!=null)recordAnswer(q,ok,false);else if(!S.mist[q.id])S.mist[q.id]={box:1,due:Date.now()+DAY,added:Date.now()};});
-  const r={k:M.k,t:Date.now(),n:M.qs.length,c,by,secs:Math.round((Date.now()-M.t0)/1000)};S.mocks.unshift(r);S.mocks=S.mocks.slice(0,30);dayRec().ms=(dayRec().ms||0)+Math.min(r.secs,3600)*1000;addXP(c*5+30);touchStreak();checkBadges();save();setTimeout(reportNow,50);
+  const r={k:M.k,t:Date.now(),n:M.qs.length,c,by,secs:Math.round((Date.now()-M.t0)/1000)};S.mocks.unshift(r);S.mocks=S.mocks.slice(0,30);dayRec().ms=(dayRec().ms||0)+Math.min(r.secs,3600)*1000;addXP(c*5+30);touchStreak();checkBadges();save();setTimeout(function(){reportNow('mock');},50);
   const done=M;M=null;sfx.win();confetti(160);const pct=Math.round(c/r.n*100);
   render(`<div class="onb">${mascot(pct>=60?'cheer':'encourage')}<h1>${c} / ${r.n} — ${pct}%</h1><p>${pct>=80?'مستوى رهيب! 🏆':pct>=60?'أداء قوي! نحسّن الباقي 💪':'التجربة نفسها إنجاز 👏 الأخطاء صارت في بنكك'}</p><p class="mut">الوقت: ${Math.floor(r.secs/60)} دقيقة · +${c*5+30} نقطة</p></div>
    <div class="card bars">${Object.entries(by).map(([t,b])=>`<div class="b"><div class="row"><span>${TYPES[t].e} ${TYPES[t].n}</span><span>${b.c}/${b.n}</span></div><div class="track"><i style="width:${b.c/b.n*100}%"></i></div></div>`).join('')}</div>
@@ -586,8 +586,8 @@ function settings(){
    <div class="grid2"><button class="btn t sm" id="exp">⬇️ تنزيل ملف</button><button class="btn ghost sm" id="share">📤 مشاركة/نسخ</button></div>
    <div class="field"><b>استرجاع</b><input type="file" id="file" accept="application/json,.json"><textarea id="paste" rows="2" placeholder="أو الصقي النسخة هنا"></textarea><button class="btn ghost sm" id="imp">♻️ استرجعي من النص</button></div></div>
    <div class="card"><button class="btn ghost sm" id="reset">🗑️ مسح تقدّم الملف الحالي</button></div>
-   <div class="card" style="background:#fff0f7"><b>💌 بابا يشجّعك</b><p class="mut">ملخص يومي (أسئلة، نسبة، مستوى، سلسلة، جواهر، غياب) يوصل لبابا — تقرير منفصل لكل أخ/أخت 💜</p></div>
-   <p class="mut" style="text-align:center" id="ver">تطبيق لولو · ${QS.length} سؤال · v1.2.0 · بدون إنترنت ✈️</p>
+   <div class="card" style="background:#fff0f7"><b>💌 بابا يشجّعك</b><p class="mut">بعد كل جولة يوصل لبابا تنبيه فوري، وملخص يومي الساعة ٩ — تقرير منفصل لكل أخ/أخت 💜</p></div>
+   <p class="mut" style="text-align:center" id="ver">تطبيق لولو · ${QS.length} سؤال · v1.2.1 · بدون إنترنت ✈️</p>
    <div class="card" id="adv" hidden><b>رابط التقرير (لولي الأمر)</b><div class="field"><input id="rurl" class="nodig" dir="ltr" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(S.reportUrl||'')}"></div><small class="mut nodig" dir="ltr">${REPORT_URL?'built-in URL set':'no built-in URL'} · queued: ${(S.outbox||[]).length}</small><br><button class="btn ghost sm" id="rsend">📤 أرسل الآن</button></div>`,{tab:'settings'});
   let taps=0;$('#ver').onclick=()=>{if(++taps>=5){$('#adv').hidden=false;}};
   $('#rurl').onchange=e=>{const v=e.target.value.trim();if(v&&!/^https:\/\/script\.google\.com\//.test(v)){toast('الرابط غير صحيح');return;}S.reportUrl=v;save();toast('تم الحفظ ✅');reportNow();};
@@ -636,8 +636,10 @@ function snapshot(){
     rewards:{gems:S.gems||0,freezes:S.streak.freeze,theme:S.theme,chestToday:S.chestDay===today(),comeback:S.comeback||null},
     penalty:{missed:(d.missed||0),xpLost:(d.penaltyXp||0),gemsLost:(d.penaltyGems||0),comebackXp:(d.comebackXp||0),comebackGems:(d.comebackGems||0)},
     types,weak,mocks:S.mocks.slice(0,5).map(m=>({d:dkey(new Date(m.t)),k:m.k,kn:(MOCKS[m.k]||{}).n||m.k,c:m.c,n:m.n,pct:Math.round(m.c/m.n*100),min:Math.round(m.secs/60)})),
+    lastRound:(function(){const h=S.hist[0];if(!h)return null;return {t:h.t,title:h.title,n:h.n,c:h.c,pct:h.n?Math.round(h.c/h.n*100):0,xp:h.xp,kind:'practice'};})(),
+    mocksCount:S.mocks.length,
     badges:S.badges.length,last7};}
-function reportNow(){if(!reportUrl())return;try{const s=snapshot();S.outbox=(S.outbox||[]).filter(x=>x.date!==s.date);S.outbox.push(s);S.outbox=S.outbox.slice(-14);save();flushReports();}catch(e){}}
+function reportNow(event){if(!reportUrl())return;try{const s=snapshot();if(event)s.event=event;if(event==='mock'&&S.mocks[0]){const m=S.mocks[0];s.lastRound={t:m.t,title:(MOCKS[m.k]||{}).n||'اختبار تجريبي',n:m.n,c:m.c,pct:Math.round(m.c/m.n*100),xp:m.c*5+30,kind:'mock',min:Math.round(m.secs/60)};}S.outbox=(S.outbox||[]).filter(x=>x.date!==s.date);S.outbox.push(s);S.outbox=S.outbox.slice(-14);save();flushReports();}catch(e){}}
 let flushing=false;
 async function flushReports(){const url=reportUrl();if(!url||flushing||!(S.outbox&&S.outbox.length)||navigator.onLine===false)return;flushing=true;
   try{while(S.outbox.length){const s=S.outbox[0];
