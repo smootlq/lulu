@@ -183,3 +183,18 @@ sup{font-size:.65em}
 .lock{opacity:.6}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
 body.calm *{animation-duration:.01ms!important;animation-iteration-count:1!important}
+
+/* v1.2.0 banners, shop, profiles, reminder */
+.banner{border-radius:20px;padding:14px 16px;margin:12px 0;box-shadow:var(--sh);animation:pop .45s}
+.banner.risk{background:linear-gradient(135deg,#fff7ed,#ffe4e6);border:2px solid #fdba74}
+.banner.rem{background:linear-gradient(135deg,#e0f2fe,#ede9fe);border:2px solid #a5b4fc}
+.banner b{display:block;margin-bottom:4px}
+.banner .btn{margin-top:8px;width:auto;display:inline-flex}
+.remcard h3{margin-top:0}
+.tile.onprof{box-shadow:inset 0 0 0 3px var(--p)}
+body.theme-dark{background:var(--bg);color:var(--ink)}
+body.theme-dark .card,body.theme-dark .tile,body.theme-dark .stat,body.theme-dark .bubble,body.theme-dark .qcard,body.theme-dark .opt,body.theme-dark .iconbtn{background:#312e81;color:var(--ink);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+body.theme-dark .tabs{background:rgba(30,27,75,.92);border-top-color:#4338ca}
+body.theme-dark .mut{color:var(--mut)}
+body.theme-dark .xpbar,body.theme-dark .bars .track{background:#1e1b4b}
+.steps{line-height:1.8}
